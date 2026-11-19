@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Traductor Secreto · Texto ⇄ Romano</title>
+  <meta name="description" content="Traductor del juego del mensaje secreto: convierte texto en números romanos y descífralo de vuelta.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%90%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="rain" aria-hidden="true"></canvas>
+  <canvas id="burst" aria-hidden="true"></canvas>
+
+  <main class="wrap">
+    <header class="hero">
+      <p class="eyebrow rise" style="--d:0">El juego del mensaje secreto</p>
+      <h1 class="rise" style="--d:1"><span class="grad">Traductor</span> secreto</h1>
+      <p class="sub rise" style="--d:2">Convierte texto en números romanos… y descífralo de vuelta.</p>
+      <div class="seg rise" style="--d:3" role="group" aria-label="Tabla de codificación">
+        <button type="button" data-mode="original" aria-pressed="true">Tabla original</button>
+        <button type="button" data-mode="mejorada" aria-pressed="false">Tabla mejorada</button>
+      </div>
+    </header>
+
+    <section class="card glow rise" style="--d:4" aria-label="Traductor">
+      <div class="dirbar">
+        <span class="dir" id="dirLabel">Español → Romano</span>
+        <div class="actions">
+          <button type="button" class="btn ghost" id="demoHola">Ejemplo «Hola»</button>
+          <button type="button" class="btn primary" id="demoSecret">🔐 Descifrar el mensaje secreto</button>
+        </div>
+      </div>
+
+      <div class="panels">
+        <div class="panel" id="panelIn">
+          <div class="panel-head"><span class="lang" id="langIn">Español</span><span class="tag" id="tagIn">texto normal</span></div>
+          <label class="sr-only" for="input">Texto de entrada</label>
+          <textarea id="input" spellcheck="false" autocomplete="off" placeholder="Escribe aquí…"></textarea>
+          <div class="panel-foot"><span id="countIn" class="mut"></span><button type="button" class="btn ghost sm" id="clear">Borrar</button></div>
+        </div>
+
+        <button type="button" class="swap" id="swap" aria-label="Intercambiar dirección de traducción" title="Intercambiar">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4 3 8l4 4"/><path d="M3 8h13"/><path d="m17 20 4-4-4-4"/><path d="M21 16H8"/></svg>
+        </button>
+
+        <div class="panel out" id="panelOut">
+          <div class="panel-head"><span class="lang" id="langOut">Romano</span><span class="tag" id="tagOut">código secreto</span></div>
+          <div class="output" id="output" tabindex="0" role="textbox" aria-readonly="true" aria-label="Resultado" data-ph="El resultado aparecerá aquí"></div>
+          <div class="panel-foot"><span id="countOut" class="mut"></span><button type="button" class="btn ghost sm" id="copy">Copiar</button></div>
+        </div>
+      </div>
+
+      <div class="status" id="status"></div>
+      <div class="trace" id="trace" aria-label="Traza carácter a carácter"></div>
+    </section>
+
+    <section class="how" aria-label="Cómo funciona">
+      <div class="step rise" style="--d:5"><span class="num">I</span><p><b>Cada letra</b><br>tiene un número romano</p></div>
+      <div class="step rise" style="--d:6"><span class="num">II</span><p><b>Se unen con «-»</b><br>y las palabras con espacio</p></div>
+      <div class="step rise" style="--d:7"><span class="num">III</span><p><b>Al revés</b><br>y vuelve el texto original</p></div>
+    </section>
+
+    <section class="card ref" aria-label="Tabla de referencia">
+      <div class="ref-head">
+        <div>
+          <h2>Tabla de referencia</h2>
+        </div>
+        <label class="search"><span class="sr-only">Buscar en la tabla</span><input id="search" type="search" placeholder="Buscar letra o código…" autocomplete="off"></label>
+      </div>
+      <div id="tiles"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <noscript><p style="position:relative;z-index:2;padding:24px">Esta página necesita JavaScript para traducir.</p></noscript>
+
+  <script src="cipher.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

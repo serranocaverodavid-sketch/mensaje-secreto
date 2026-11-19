@@ -162,16 +162,6 @@
     update({ animate: true });
   });
 
-  /* ---------------- modo de tabla ---------------- */
-  document.querySelectorAll('.seg button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.mode = btn.dataset.mode;
-      document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
-      renderTiles();
-      update({ animate: !!state.note });
-    });
-  });
-
   /* ---------------- entrada ---------------- */
   el.input.addEventListener('input', () => { state.note = ''; update(); });
   $('clear').addEventListener('click', () => { el.input.value = ''; state.note = ''; update(); el.input.focus(); });
@@ -183,9 +173,7 @@
   $('demoSecret').addEventListener('click', () => {
     setDir('dec');
     el.input.value = C.SECRET;
-    state.note = state.mode === 'original'
-      ? 'En la tabla original VII = D y XLIV = U (mayúsculas), por eso salen «toDos», «De» y «grUpo».'
-      : 'En la tabla mejorada XLIV = u; VII sigue siendo D mayúscula (así sale «toDos» y «De»).';
+    state.note = 'En la tabla VII = D y XLIV = U (mayúsculas), por eso salen «toDos», «De» y «grUpo».';
     update({ animate: true });
     const r = $('panelOut').getBoundingClientRect();
     burst(r.left + r.width / 2, r.top + r.height / 3);
@@ -218,9 +206,6 @@
     let items = tbl.pairs.map(([ch, code]) => ({
       ch, code, flag: tbl.amb.has(code) ? 'dup' : ''
     }));
-    if (state.mode === 'original') {
-      items = items.concat(C.MISSING_IN_ORIGINAL.map(ch => ({ ch, code: null, flag: 'none' })));
-    }
     items.push({ ch: '␣', name: 'espacio', code: '--', flag: '', space: true });
     if (q) items = items.filter(t => t.ch.toLowerCase().includes(q) || (t.name && t.name.includes(q)) || (t.code && t.code.includes(qUp)));
 
@@ -237,7 +222,7 @@
       groups[name].forEach(t => {
         const b = document.createElement('button');
         b.type = 'button'; b.className = 'tile ' + t.flag; b.style.setProperty('--i', i++);
-        b.title = t.code ? (t.name || t.ch) + ' = ' + t.code : t.ch + ': sin código en la tabla original';
+        b.title = t.code ? (t.name || t.ch) + ' = ' + t.code : t.ch + ': sin código';
         const ch = document.createElement('span'); ch.className = 'ch'; ch.textContent = t.ch;
         const cd = document.createElement('span'); cd.className = 'cd'; cd.textContent = t.code || '—';
         b.append(ch, cd);

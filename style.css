@@ -51,10 +51,6 @@ h1 { font: 800 clamp(2.4rem, 7vw, 4.6rem)/1.05 var(--serif); margin: 10px 0 12px
 @keyframes flow { to { background-position: 300% 0; } }
 .sub { color: var(--mut); font-size: 1.1rem; max-width: 520px; margin: 0 auto 22px; }
 
-.seg { display: inline-flex; padding: 4px; gap: 4px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255, 255, 255, .03); }
-.seg button { font: 500 .9rem var(--sans); color: var(--mut); background: none; border: 0; padding: 8px 18px; border-radius: 999px; cursor: pointer; transition: .25s; }
-.seg button:hover { color: var(--ink); }
-.seg button[aria-pressed="true"] { color: #04101f; background: linear-gradient(100deg, var(--cyan), #7dd3fc); box-shadow: 0 6px 22px -6px rgba(34, 211, 238, .7); font-weight: 700; }
 
 /* ---------- tarjetas ---------- */
 .card {

@@ -5,7 +5,6 @@ Pequeña web para jugar al **juego del mensaje secreto**: convierte texto en nú
 - Cada carácter se sustituye por un número romano (`A → I`, `a → II`, `B → III`, …).
 - Los códigos de una palabra se unen con `-` y las palabras se separan con `--` (un doble guion es un espacio).
 - El botón ⇄ invierte la dirección de la traducción.
-- Dos tablas: **original** (la del documento, con sus huecos) y **mejorada** (completa y sin códigos repetidos).
 - Incluye el mensaje secreto de ejemplo y una tabla de referencia con buscador.
 
 Ejemplo: `Hola` → `XV-XXXII-XXIV-II`

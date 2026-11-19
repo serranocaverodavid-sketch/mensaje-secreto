@@ -4,22 +4,12 @@
  * y las palabras se separan con "--" (un doble guion es un espacio).
  * Al descifrar también se aceptan los espacios normales (formato del documento original).
  *
- * Dos tablas:
- *  - "original": la del documento, completada con S, u y w (códigos libres XXXIX, XLIII y XLVII).
- *  - "mejorada": completa y sin códigos repetidos (A=I, a=II, B=III ... en orden).
+ * La tabla es la del documento, completada con S, u y w (códigos libres XXXIX, XLIII y XLVII).
  */
 (function (root) {
   'use strict';
 
-  function toRoman(n) {
-    const map = [[100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
-    let s = '';
-    for (const [v, r] of map) while (n >= v) { s += r; n -= v; }
-    return s;
-  }
-
-  // ---- Tabla ORIGINAL: la del diccionario `codificacion` del documento ----
-  const ORIGINAL_PAIRS = [
+  const PAIRS = [
     ['A', 'I'], ['a', 'II'], ['B', 'III'], ['b', 'IV'], ['C', 'V'], ['c', 'VI'],
     ['D', 'VII'], ['d', 'VIII'], ['E', 'IX'], ['e', 'X'], ['F', 'XI'], ['f', 'XII'],
     ['G', 'XIII'], ['g', 'XIV'], ['H', 'XV'], ['h', 'XVI'], ['I', 'XVII'], ['i', 'XVIII'],
@@ -47,14 +37,11 @@
     ['-', 'CIV']
   ];
 
-  // ---- Tabla MEJORADA: secuencia continua 1..110, sin huecos ni repetidos ----
   const LETTERS = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnÑñOoPpQqRrSsTtUuVvWwXxYyZz';
   const ACCENTS = 'ÁáÉéÍíÓóÚúÜü';
   const DIGITS = '0123456789';
-  const SYMBOLS = '@#$%&*?+<>^`|"\';_()[]{}-=/\\~.,:!¡¿';
-  const IMPROVED_PAIRS = [...(LETTERS + ACCENTS + DIGITS + SYMBOLS)].map((ch, i) => [ch, toRoman(i + 1)]);
 
-  function makeTable(id, label, pairs) {
+  function makeTable(pairs) {
     const enc = new Map(pairs);
     const dec = new Map();
     const amb = new Set(); // códigos compartidos por más de un carácter
@@ -63,16 +50,10 @@
       if (dec.has(code)) amb.add(code);
       dec.set(code, ch);
     }
-    return { id, label, pairs, enc, dec, amb };
+    return { pairs, enc, dec, amb };
   }
 
-  const TABLES = {
-    original: makeTable('original', 'Tabla original', ORIGINAL_PAIRS),
-    mejorada: makeTable('mejorada', 'Tabla mejorada', IMPROVED_PAIRS)
-  };
-
-  // Caracteres alfanuméricos que la tabla original no codifica (ahora ninguno)
-  const MISSING_IN_ORIGINAL = [...(LETTERS + ACCENTS + DIGITS)].filter(ch => !TABLES.original.enc.has(ch));
+  const TABLES = { original: makeTable(PAIRS) };
 
   function groupOf(ch) {
     if (LETTERS.includes(ch)) return 'Letras';
@@ -149,6 +130,6 @@
   // El mensaje del documento, con "--" como espacio
   const SECRET = 'XV-XXXII-XXIV-II--II--XLII-XXXII-VII-XXXII-XL--XXIV-XXXII-XL--VI-XXXII-XXVI-XXXIV-XVIII-XL--VII-X--XXIV-II--VI-XXIV-II-XL-X--XL-XXXII-XXVI-XXXII-XL--X-XXIV--XXVI-X-XX-XXXII-XXXVIII--XIV-XXXVIII-XLIV-XXXIV-XXXII';
 
-  root.Cipher = { TABLES, encode, decode, looksLikeCode, groupOf, toRoman, MISSING_IN_ORIGINAL, SECRET };
+  root.Cipher = { TABLES, encode, decode, looksLikeCode, groupOf, SECRET };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.Cipher;
 })(typeof window !== 'undefined' ? window : globalThis);

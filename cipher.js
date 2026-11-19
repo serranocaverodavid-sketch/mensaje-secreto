@@ -127,8 +127,8 @@
     return t.replace(/[IVXLC\s-]/gi, '').length / t.length < 0.3;
   }
 
-  // El mensaje del documento, con "--" como espacio
-  const SECRET = 'XV-XXXII-XXIV-II--II--XLII-XXXII-VII-XXXII-XL--XXIV-XXXII-XL--VI-XXXII-XXVI-XXXIV-XVIII-XL--VII-X--XXIV-II--VI-XXIV-II-XL-X--XL-XXXII-XXVI-XXXII-XL--X-XXIV--XXVI-X-XX-XXXII-XXXVIII--XIV-XXXVIII-XLIV-XXXIV-XXXII';
+  // El mensaje secreto, con "--" como espacio: «Hola a todos los compis de la clase somos el mejor grupo»
+  const SECRET = 'XV-XXXII-XXIV-II--II--XLII-XXXII-VIII-XXXII-XL--XXIV-XXXII-XL--VI-XXXII-XXVI-XXXIV-XVIII-XL--VIII-X--XXIV-II--VI-XXIV-II-XL-X--XL-XXXII-XXVI-XXXII-XL--X-XXIV--XXVI-X-XX-XXXII-XXXVIII--XIV-XXXVIII-XLIII-XXXIV-XXXII';
 
   root.Cipher = { TABLES, encode, decode, looksLikeCode, groupOf, SECRET };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.Cipher;

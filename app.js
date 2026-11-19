@@ -173,7 +173,7 @@
   $('demoSecret').addEventListener('click', () => {
     setDir('dec');
     el.input.value = C.SECRET;
-    state.note = 'En la tabla VII = D y XLIV = U (mayúsculas), por eso salen «toDos», «De» y «grUpo».';
+    state.note = '';
     update({ animate: true });
     const r = $('panelOut').getBoundingClientRect();
     burst(r.left + r.width / 2, r.top + r.height / 3);

@@ -53,12 +53,19 @@
     const MAX = 60;
     const frag = document.createDocumentFragment();
     let shown = 0, total = 0;
-    toks.forEach(t => { if (!t.ws) total++; });
+    toks.forEach(t => { if (!t.ws || t.space) total++; });
     for (const t of toks) {
       if (shown >= MAX) break;
       const chip = document.createElement('div');
       chip.style.setProperty('--i', shown);
-      if (t.ws) {
+      if (t.ws && t.space) {
+        // un espacio se escribe "--"
+        chip.className = 'chip sp';
+        const b = document.createElement('b'); b.textContent = '␣';
+        const i = document.createElement('i'); i.textContent = '--';
+        chip.append(b, i);
+        shown++;
+      } else if (t.ws) {
         chip.className = 'chip gap';
       } else {
         chip.className = 'chip ' + t.flag;
@@ -214,7 +221,8 @@
     if (state.mode === 'original') {
       items = items.concat(C.MISSING_IN_ORIGINAL.map(ch => ({ ch, code: null, flag: 'none' })));
     }
-    if (q) items = items.filter(t => t.ch.toLowerCase().includes(q) || (t.code && t.code.includes(qUp)));
+    items.push({ ch: '␣', name: 'espacio', code: '--', flag: '', space: true });
+    if (q) items = items.filter(t => t.ch.toLowerCase().includes(q) || (t.name && t.name.includes(q)) || (t.code && t.code.includes(qUp)));
 
     const groups = {};
     for (const t of items) (groups[C.groupOf(t.ch)] = groups[C.groupOf(t.ch)] || []).push(t);
@@ -229,7 +237,7 @@
       groups[name].forEach(t => {
         const b = document.createElement('button');
         b.type = 'button'; b.className = 'tile ' + t.flag; b.style.setProperty('--i', i++);
-        b.title = t.code ? t.ch + ' = ' + t.code : t.ch + ': sin código en la tabla original';
+        b.title = t.code ? (t.name || t.ch) + ' = ' + t.code : t.ch + ': sin código en la tabla original';
         const ch = document.createElement('span'); ch.className = 'ch'; ch.textContent = t.ch;
         const cd = document.createElement('span'); cd.className = 'cd'; cd.textContent = t.code || '—';
         b.append(ch, cd);
@@ -245,7 +253,9 @@
   function insertFromTile(t) {
     state.note = '';
     const cur = el.input.value;
-    if (state.dir === 'enc') {
+    if (t.space) {
+      el.input.value = cur + (state.dir === 'enc' ? ' ' : '--');
+    } else if (state.dir === 'enc') {
       el.input.value = cur + t.ch;
     } else {
       if (!t.code) return toast('Esa tecla no tiene código');

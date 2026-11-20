@@ -220,5 +220,6 @@
 
   $('vJoin').addEventListener('submit', join);
   show('vLoading');
-  connect(setNet).then(boot);
+  const wanted = parseInt(new URLSearchParams(location.search).get('b'), 10); // servidor de la sala
+  connect(setNet, Number.isNaN(wanted) ? undefined : wanted).then(boot);
 })();

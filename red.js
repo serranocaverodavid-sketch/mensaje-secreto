@@ -12,9 +12,14 @@
 (function (root) {
   'use strict';
 
+  // El primero va por el puerto 443 (el de cualquier web https), que las redes de los
+  // centros educativos casi nunca bloquean. Los otros usan puertos raros (8084, 8884) y
+  // sirven de reserva en casa o en otras redes. La sala y los móviles tienen que acabar
+  // en el MISMO servidor: la sala pone su número en el QR (?b=N) y el móvil lo prueba primero.
   const BROKERS = [
-    'wss://broker.emqx.io:8084/mqtt',
-    'wss://broker.hivemq.com:8884/mqtt'
+    { url: 'wss://public.cloud.shiftr.io', username: 'public', password: 'public' },
+    { url: 'wss://broker.emqx.io:8084/mqtt' },
+    { url: 'wss://broker.hivemq.com:8884/mqtt' }
   ];
   const BASE = 'mensaje-secreto-dsc/v1';
 
@@ -25,26 +30,35 @@
     inbox: (room, id) => `${BASE}/r/${room}/p/${id}`
   };
 
-  /** Conecta con el primer servidor que responda. onStatus('ok' | 'reconnecting' | 'offline'). */
-  function connect(onStatus) {
+  /**
+   * Conecta con el primer servidor que responda, empezando por el número `preferred`
+   * (el que usa la sala). El cliente devuelto lleva `client.msBroker` = número del servidor.
+   * onStatus('ok' | 'reconnecting' | 'offline' | 'slow').
+   */
+  function connect(onStatus, preferred) {
     return new Promise((resolve) => {
-      let i = 0;
+      let i = Number.isInteger(preferred) && preferred >= 0 && preferred < BROKERS.length ? preferred : 0;
       let done = false;
-      // Si tarda, seguramente la red (p. ej. el wifi del instituto) bloquea el servidor.
+      // Si tarda, seguramente la red (p. ej. el wifi del instituto) bloquea los servidores.
       setTimeout(() => { if (!done && onStatus) onStatus('slow'); }, 8000);
+      if (!root.mqtt) { if (onStatus) onStatus('slow'); return; } // la librería MQTT no ha cargado
       const tryNext = () => {
-        const url = BROKERS[i % BROKERS.length];
+        const idx = i % BROKERS.length;
         i++;
-        const client = root.mqtt.connect(url, {
+        const b = BROKERS[idx];
+        const opts = {
           clientId: 'ms_' + Math.random().toString(36).slice(2, 12),
           clean: true,
           keepalive: 30,
           reconnectPeriod: 2000,
-          connectTimeout: 6000
-        });
+          connectTimeout: 5000
+        };
+        if (b.username) { opts.username = b.username; opts.password = b.password; }
+        const client = root.mqtt.connect(b.url, opts);
+        client.msBroker = idx;
         const timer = setTimeout(() => {
           if (!done) { client.end(true); tryNext(); }
-        }, 7000);
+        }, 6000);
         client.on('connect', () => {
           clearTimeout(timer);
           if (onStatus) onStatus('ok');

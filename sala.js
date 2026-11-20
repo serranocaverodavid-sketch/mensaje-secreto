@@ -51,7 +51,7 @@
 
   function joinUrl() {
     const u = new URL('jugar.html', location.href);
-    u.search = '?sala=' + S.room;
+    u.search = '?sala=' + S.room + (client ? '&b=' + client.msBroker : ''); // b = servidor que usa la sala
     return u.toString();
   }
 

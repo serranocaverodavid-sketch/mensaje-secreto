@@ -133,7 +133,6 @@
       box.textContent = url;
     }
     $('code').textContent = S.room;
-    $('url').textContent = url.replace(/^https?:\/\//, '');
   }
 
   const fmt = (ms) => {

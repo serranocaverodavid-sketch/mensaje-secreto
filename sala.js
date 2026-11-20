@@ -57,7 +57,10 @@
 
   // ---------- red ----------
   function setNet(st) {
-    const map = { ok: ['', 'Conectado'], reconnecting: ['warn', 'Reconectando…'], offline: ['off', 'Sin conexión'] };
+    const map = {
+      ok: ['', 'Conectado'], reconnecting: ['warn', 'Reconectando…'], offline: ['off', 'Sin conexión'],
+      slow: ['off', 'No conecta: esta red bloquea el juego. Conecta el portátil a los datos del móvil.']
+    };
     const [cls, txt] = map[st] || map.offline;
     const d = document.createElement('span');
     d.className = 'dot ' + cls;

@@ -22,8 +22,12 @@
   function show(v) { for (const x of VIEWS) $(x).hidden = x !== v; }
 
   function setNet(st) {
-    const map = { ok: ['', 'Conectado'], reconnecting: ['warn', 'Reconectando…'], offline: ['off', 'Sin conexión'] };
+    const map = {
+      ok: ['', 'Conectado'], reconnecting: ['warn', 'Reconectando…'], offline: ['off', 'Sin conexión'],
+      slow: ['off', 'No conecta']
+    };
     const [cls, txt] = map[st] || map.offline;
+    if (st === 'slow') $('loadingMsg').textContent = 'No conecta con el juego. Quita el wifi y usa los datos móviles 📶';
     const d = document.createElement('span');
     d.className = 'dot ' + cls;
     $('net').replaceChildren(d, txt);

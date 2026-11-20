@@ -30,6 +30,8 @@
     return new Promise((resolve) => {
       let i = 0;
       let done = false;
+      // Si tarda, seguramente la red (p. ej. el wifi del instituto) bloquea el servidor.
+      setTimeout(() => { if (!done && onStatus) onStatus('slow'); }, 8000);
       const tryNext = () => {
         const url = BROKERS[i % BROKERS.length];
         i++;

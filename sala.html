@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sala de juego · Mensaje secreto</title>
-  <meta name="description" content="Pantalla de la clase: todos entran con su nombre, se hacen parejas y se mandan mensajes secretos.">
+  <meta name="description" content="Pantalla de la clase: todos entran con su nombre y compiten descifrando palabras en código romano.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,12 +17,12 @@
   <main class="sala">
     <header class="sala-top">
       <div>
-        <p class="eyebrow">El juego del mensaje secreto</p>
+        <p class="eyebrow" id="eyebrow">El juego del mensaje secreto</p>
         <h1 id="title"><span class="grad">¡A jugar!</span></h1>
       </div>
       <div class="sala-meta">
         <span class="net" id="net"><span class="dot warn"></span>Conectando…</span>
-        <div id="clock" class="timer" hidden>00:00</div>
+        <span class="mut" id="answered" hidden></span>
       </div>
     </header>
 
@@ -48,32 +48,43 @@
       </div>
     </section>
 
-    <!-- 2. Partida: parejas + ranking -->
-    <section class="game" id="game" hidden>
-      <div style="display:flex;flex-direction:column;gap:16px;min-height:0">
-        <div class="stats">
-          <div class="stat"><b id="sSent">0</b>mensajes enviados</div>
-          <div class="stat"><b id="sSolved">0</b>descifrados</div>
-          <div class="stat"><b id="sTotal">0</b>jugadores</div>
-        </div>
-        <div class="pairs" id="pairs"></div>
+    <!-- 2. Pregunta: código en grande + cuenta atrás -->
+    <section class="quiz" id="question" hidden>
+      <div class="timebar"><div id="timefill"></div></div>
+      <div class="ask">
+        <p class="mut">¿Qué palabra es?</p>
+        <div class="bigcode" id="bigcode"></div>
+        <div class="secs" id="secs">20</div>
       </div>
-      <aside class="card podium">
-        <h2>🏆 Los más rápidos</h2>
-        <ol class="rank" id="podium"></ol>
-        <p class="mut" id="podiumEmpty" style="margin-top:8px">Nadie ha descifrado aún…</p>
-      </aside>
+      <div class="opts" id="optsQ"></div>
+      <div class="hint" id="hint"></div>
     </section>
 
-    <!-- 3. Final -->
+    <!-- 3. Resultado de la ronda -->
+    <section class="quiz" id="reveal" hidden>
+      <div class="reveal-top">
+        <div>
+          <p class="mut" id="revCode"></p>
+          <div class="answer" id="revWord"></div>
+        </div>
+        <div class="opts small" id="optsR"></div>
+      </div>
+      <div class="card board">
+        <h2>🏆 Clasificación</h2>
+        <ol class="rank" id="board"></ol>
+      </div>
+    </section>
+
+    <!-- 4. Podio final -->
     <section class="final" id="final" hidden>
-      <h2 class="grad">¡Fin de la partida!</h2>
+      <div class="podium3" id="podium3"></div>
       <ol class="rank" id="finalRank"></ol>
     </section>
 
     <footer class="sala-foot">
       <button type="button" class="btn big pink" id="start" disabled>¡EMPEZAR!</button>
-      <button type="button" class="btn big" id="finish" hidden>Terminar y ver ranking</button>
+      <button type="button" class="btn big ghost" id="skip" hidden>Ver respuesta</button>
+      <button type="button" class="btn big" id="next" hidden>Siguiente ronda ▶</button>
       <button type="button" class="btn ghost" id="again" hidden>Nueva partida</button>
     </footer>
   </main>
@@ -81,6 +92,7 @@
   <noscript><p style="padding:24px">Esta página necesita JavaScript.</p></noscript>
   <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="cipher.js"></script>
   <script src="red.js"></script>
   <script src="sala.js"></script>
 </body>

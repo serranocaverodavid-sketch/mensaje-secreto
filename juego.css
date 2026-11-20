@@ -186,3 +186,79 @@ body {
   .sala { padding: 20px 16px; }
   .lobby, .game { grid-template-columns: 1fr; }
 }
+
+/* ================= CONCURSO ================= */
+.c0 { --c: #ff3fb4; }
+.c1 { --c: #22d3ee; }
+.c2 { --c: #fbbf24; }
+.c3 { --c: #34d399; }
+
+.timebar { height: 12px; border-radius: 999px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+.timebar > div { height: 100%; width: 100%; background: linear-gradient(90deg, var(--pink), var(--gold)); transition: width .2s linear; }
+
+.quiz { flex: 1; display: flex; flex-direction: column; gap: 22px; min-height: 0; }
+.ask { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.ask .mut { font-size: 1.4rem; }
+.bigcode {
+  font: 700 clamp(2.4rem, 6.5vw, 6rem)/1.15 var(--mono); color: var(--cyan); letter-spacing: .02em;
+  text-shadow: 0 0 40px rgba(34, 211, 238, .35); word-break: break-all;
+  animation: pop .5s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+.secs { font: 800 3.2rem var(--serif); color: var(--gold); }
+.secs.hurry { color: var(--pink); animation: pulse 1s infinite; }
+
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.opt {
+  display: flex; align-items: center; gap: 16px; padding: 18px 24px; border-radius: 18px;
+  background: color-mix(in srgb, var(--c) 18%, transparent); border: 2px solid var(--c);
+  font: 700 clamp(1.4rem, 2.6vw, 2.2rem) var(--sans);
+}
+.opt .shape { color: var(--c); font-size: 1.1em; }
+.opt .n { margin-left: auto; font: 800 1.4rem var(--mono); }
+.opt.wrong { opacity: .35; }
+.opt.right { box-shadow: 0 0 0 4px var(--c), 0 0 40px color-mix(in srgb, var(--c) 50%, transparent); }
+.opts.small .opt { padding: 12px 18px; font-size: 1.3rem; }
+
+.hint { display: grid; grid-template-columns: repeat(14, 1fr); gap: 6px; margin-top: auto; }
+.hint div { display: flex; flex-direction: column; align-items: center; padding: 6px 2px; border-radius: 10px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); }
+.hint b { font: 700 1.2rem var(--sans); }
+.hint span { font: 600 .82rem var(--mono); color: var(--cyan); }
+
+.reveal-top { display: grid; grid-template-columns: minmax(260px, 1fr) 1.3fr; gap: 26px; align-items: center; }
+.answer { font: 800 clamp(3rem, 8vw, 6.5rem)/1 var(--serif); color: var(--ok); text-shadow: 0 0 40px rgba(52, 211, 153, .4); animation: pop .5s both; }
+#revCode { font: 600 1.1rem var(--mono); color: var(--cyan); word-break: break-all; margin-bottom: 6px; }
+.board { flex: 1; min-height: 0; overflow: auto; }
+.board h2 { font: 700 1.4rem var(--sans); margin-bottom: 12px; }
+.gain { margin-left: auto; font: 700 1rem var(--mono); color: var(--ok); }
+.gain + .t { margin-left: 16px; }
+
+.podium3 { display: flex; align-items: flex-end; justify-content: center; gap: 18px; margin-top: 10px; }
+.podium3 .step { display: flex; flex-direction: column; align-items: center; gap: 6px; width: min(240px, 28vw); animation: pop .6s both; }
+.podium3 .medal { font-size: 3rem; }
+.podium3 .pn { font: 800 clamp(1.3rem, 2.4vw, 2rem) var(--sans); text-align: center; overflow-wrap: anywhere; }
+.podium3 .ps { font: 700 1.1rem var(--mono); color: var(--gold); }
+.podium3 .block { width: 100%; border-radius: 16px 16px 0 0; display: grid; place-items: center; font: 800 3rem var(--serif); color: #07091a; }
+.podium3 .s1 .block { height: 220px; background: var(--gold); }
+.podium3 .s2 .block { height: 160px; background: #cbd5e1; }
+.podium3 .s3 .block { height: 120px; background: #d97706; }
+.podium3 .s1 { animation-delay: .5s; }
+.podium3 .s3 { animation-delay: .25s; }
+
+/* móvil */
+.abtns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.abtn {
+  min-height: 130px; border: 0; border-radius: 20px; cursor: pointer; color: #07091a;
+  background: var(--c); font: 800 1.5rem var(--sans);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  transition: transform .1s;
+}
+.abtn:active { transform: scale(.95); }
+.abtn .shape { font-size: 1.6rem; }
+.result .medal { font-size: 3.6rem; }
+.result h2 { font: 800 1.8rem var(--sans); margin: 6px 0; }
+.result .place { font: 800 1.4rem var(--serif); color: var(--gold); margin-top: 10px; }
+
+@media (max-width: 860px) {
+  .opts, .reveal-top { grid-template-columns: 1fr; }
+  .hint { grid-template-columns: repeat(7, 1fr); }
+}

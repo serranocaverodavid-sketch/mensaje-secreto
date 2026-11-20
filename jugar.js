@@ -1,31 +1,25 @@
-/* Móvil: entra con tu nombre, manda un mensaje cifrado a tu pareja y descifra el suyo. */
+/* Móvil, modo concurso: entra con tu nombre y elige la palabra correcta lo antes posible. */
 (function () {
   'use strict';
-  const { connect, pub, parse, T, norm, fingerprint, uid, store, confetti } = window.Red;
-  const { encode, TABLES } = window.Cipher;
-  const TBL = TABLES.original;
+  const { connect, pub, parse, T, uid, store, confetti } = window.Red;
   const $ = (id) => document.getElementById(id);
+  const COLORS = ['c0', 'c1', 'c2', 'c3'];
+  const SHAPES = ['▲', '◆', '●', '■'];
 
   let client = null;
   let room = new URLSearchParams(location.search).get('sala');
   room = room ? room.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6) : null;
-  let S = null; // estado publicado por la sala
-  let me = null; // { id, name, joined, sent, solved, wasListed }
-  let inbox = null; // { from, fromName, code, fp }
+  let S = null; // estado que publica la sala
+  let me = null; // { id, name, joined, picks: { ronda: opción } }
+  let askShownAt = 0;
+  let timer = null;
+  let celebrated = -1;
 
-  const meKey = () => 'ms_me_' + room;
+  const meKey = () => 'ms_me_quiz_' + room;
   const saveMe = () => store.set(meKey(), me);
 
-  // ---------- vistas ----------
-  const VIEWS = ['vLoading', 'vJoin', 'vWait', 'vGame', 'vInfo'];
+  const VIEWS = ['vLoading', 'vJoin', 'vWait', 'vAsk', 'vResult', 'vInfo'];
   function show(v) { for (const x of VIEWS) $(x).hidden = x !== v; }
-
-  function info(icon, title, text) {
-    $('infoIcon').textContent = icon;
-    $('infoTitle').textContent = title;
-    $('infoText').textContent = text;
-    show('vInfo');
-  }
 
   function setNet(st) {
     const map = { ok: ['', 'Conectado'], reconnecting: ['warn', 'Reconectando…'], offline: ['off', 'Sin conexión'] };
@@ -35,99 +29,118 @@
     $('net').replaceChildren(d, txt);
   }
 
-  const nameOf = (id) => ((S && S.players.find((p) => p.id === id)) || {}).name || '¿?';
-
-  function myGroup() {
-    if (!S || !S.groups) return null;
-    return S.groups.find((g) => g.includes(me.id)) || null;
+  const listed = () => S && S.players.some((p) => p.id === me.id);
+  const myName = () => ((S && S.players.find((p) => p.id === me.id)) || {}).name || me.name;
+  function myPlace() {
+    const sorted = [...S.players].sort((a, b) => (S.scores[b.id] || 0) - (S.scores[a.id] || 0));
+    return sorted.findIndex((p) => p.id === me.id) + 1;
   }
 
-  // ---------- pintar según el estado ----------
-  function render() {
-    if (!room || !S) return;
-    const listed = S.players.some((p) => p.id === me.id);
+  function wait(top, text) {
+    $('waitTop').textContent = top;
+    $('waitName').textContent = myName();
+    $('waitText').textContent = text;
+    $('waitCount').textContent = S && S.players.length > 1 ? `Sois ${S.players.length} jugando.` : '';
+    show('vWait');
+  }
 
-    if (S.phase === 'lobby') {
-      if (me.wasListed && !listed) { // la sala te ha quitado
+  // ---------- pintar ----------
+  function render() {
+    clearInterval(timer);
+    if (!room || !S) return;
+    $('eyebrow').textContent = S.phase === 'lobby' || !S.round ? 'El juego del mensaje secreto' : `Ronda ${S.round} de ${S.rounds}`;
+
+    if (!me.joined) { show('vJoin'); return; }
+    if (!listed()) {
+      if (me.wasListed) { // la sala te ha quitado
         me.joined = false; me.wasListed = false; saveMe();
         $('joinMsg').textContent = 'Te han quitado de la sala. Puedes volver a entrar.';
-      }
-      if (listed) {
-        me.wasListed = true; saveMe();
-        $('waitName').textContent = nameOf(me.id);
-        $('waitCount').textContent = S.players.length === 1 ? 'De momento solo estás tú.' : `Ya sois ${S.players.length} en la sala.`;
-        show('vWait');
-      } else if (me.joined) {
-        show('vWait');
-        $('waitName').textContent = me.name;
-        $('waitCount').textContent = 'Entrando…';
-      } else {
         show('vJoin');
+      } else {
+        wait('Entrando…', 'Un segundo…');
       }
       return;
     }
+    me.wasListed = true;
+    saveMe();
 
-    if (S.phase === 'game') {
-      const g = myGroup();
-      if (!g) {
-        info('⏳', 'La partida ya ha empezado', 'Mira la pantalla y espera a la siguiente ronda.');
+    if (S.phase === 'lobby') { wait('¡Estás dentro!', 'Mira la pantalla: la partida empieza enseguida.'); return; }
+
+    if (S.phase === 'question') {
+      if (me.picks[S.round] != null) {
+        wait('¡Respuesta enviada!', '¿Habrás acertado? Mira la pantalla…');
         return;
       }
-      renderGame(g);
-      show('vGame');
+      renderAsk();
       return;
     }
 
+    if (S.phase === 'reveal') { renderResult(); return; }
+
     if (S.phase === 'end') {
-      const pos = S.solved.findIndex((x) => x.id === me.id);
-      if (pos >= 0) info(['🥇', '🥈', '🥉'][pos] || '🎉', `¡Fin! Quedaste en el puesto ${pos + 1}`, 'Mira la pantalla para ver el ranking completo.');
-      else info('🏁', '¡Fin de la partida!', 'Mira la pantalla para ver el ranking.');
+      const place = myPlace();
+      $('resIcon').textContent = ['🥇', '🥈', '🥉'][place - 1] || '🏁';
+      $('resTitle').textContent = place <= 3 ? '¡Estás en el podio!' : '¡Fin de la partida!';
+      $('resText').textContent = `${S.scores[me.id] || 0} puntos`;
+      $('resPlace').textContent = `Puesto #${place} de ${S.players.length}`;
+      show('vResult');
+      if (place === 1 && celebrated !== 99) { celebrated = 99; confetti($('burst'), 200); }
     }
   }
 
-  function renderGame(g) {
-    const i = g.indexOf(me.id);
-    const to = g[(i + 1) % g.length];
-    const from = g[(i - 1 + g.length) % g.length];
-    if (g.length === 2) {
-      $('mateLabel').textContent = 'Tu pareja es';
-      $('mate').textContent = nameOf(to);
-      $('mateNote').textContent = 'Buscad dónde está el otro… ¡pero no os digáis el mensaje!';
-    } else {
-      $('mateLabel').textContent = 'Sois un trío';
-      $('mate').textContent = g.filter((x) => x !== me.id).map(nameOf).join(' y ');
-      $('mateNote').textContent = `Tú escribes a ${nameOf(to)} y descifras el de ${nameOf(from)}.`;
-    }
-    me.to = to;
+  function renderAsk() {
+    const q = S.q;
+    $('askCode').textContent = q.code;
+    const box = $('abtns');
+    box.innerHTML = '';
+    q.options.forEach((w, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'abtn ' + COLORS[i];
+      const s = document.createElement('span');
+      s.className = 'shape';
+      s.textContent = SHAPES[i];
+      const t = document.createElement('span');
+      t.textContent = w;
+      b.append(s, t);
+      b.addEventListener('click', () => answer(i));
+      box.append(b);
+    });
+    show('vAsk');
+    const limit = S.limit || 20000;
+    const start = askShownAt;
+    const upd = () => {
+      const left = Math.max(0, limit - (Date.now() - start));
+      $('timefill').style.width = (left / limit * 100) + '%';
+    };
+    upd();
+    timer = setInterval(upd, 200);
+  }
 
-    // ① enviar
-    $('sendForm').hidden = !!me.sent;
-    $('sentOk').hidden = !me.sent;
-    if (me.sent) $('sentOk').textContent = `✓ Enviado a ${nameOf(to)}: ${me.sentCode}`;
-
-    // ② recibir
-    const solvedPos = S.solved.findIndex((x) => x.id === me.id);
-    if (me.solved || solvedPos >= 0) {
-      $('recvWait').hidden = true;
-      $('recvBox').hidden = true;
-      $('winBox').hidden = false;
-      $('medal').textContent = ['🥇', '🥈', '🥉'][solvedPos] || '🎉';
-      $('place').textContent = solvedPos >= 0 ? `Puesto #${solvedPos + 1}` : '¡Bien!';
-      $('plain').textContent = me.solvedText || '';
-    } else if (inbox && inbox.from === from) {
-      $('recvWait').hidden = true;
-      $('winBox').hidden = true;
-      if ($('recvBox').hidden) {
-        $('recvBox').hidden = false;
-        $('recvFrom').textContent = `Mensaje de ${inbox.fromName || nameOf(from)}:`;
-        $('secret').textContent = inbox.code;
+  function renderResult() {
+    const pick = me.picks[S.round];
+    const gain = (S.gains || {})[me.id] || 0;
+    const right = S.q.options[S.q.correct];
+    if (pick == null) {
+      $('resIcon').textContent = '⏰';
+      $('resTitle').textContent = '¡Se acabó el tiempo!';
+      $('resText').textContent = `Era «${right}».`;
+    } else if (gain) {
+      $('resIcon').textContent = '✅';
+      $('resTitle').textContent = `¡Correcto! +${gain}`;
+      $('resText').textContent = `Era «${right}».`;
+      if (celebrated !== S.round) {
+        celebrated = S.round;
+        confetti($('burst'), 90);
+        if (navigator.vibrate) navigator.vibrate([50, 30, 90]);
       }
     } else {
-      $('recvBox').hidden = true;
-      $('winBox').hidden = true;
-      $('recvWait').hidden = false;
-      $('recvWaitTxt').textContent = `Esperando a que ${nameOf(from)} te escriba…`;
+      $('resIcon').textContent = '❌';
+      $('resTitle').textContent = '¡Casi!';
+      $('resText').textContent = `Era «${right}».`;
     }
+    $('resPlace').textContent = `Vas el #${myPlace()} · ${S.scores[me.id] || 0} pts`;
+    show('vResult');
   }
 
   // ---------- acciones ----------
@@ -144,83 +157,29 @@
     render();
   }
 
-  // Solo letras y signos que existen en la tabla (y espacios).
-  function clean(text) {
-    return [...text.normalize('NFC')].filter((ch) => ch === ' ' || TBL.enc.has(ch)).join('').replace(/\s+/g, ' ');
-  }
-
-  function updatePreview() {
-    const t = clean($('text').value);
-    $('preview').textContent = t.trim() ? encode(t.trim(), TBL).out : '';
-  }
-
-  function send() {
-    const t = clean($('text').value).trim();
-    if (!/[A-Za-zÑñÁÉÍÓÚÜáéíóúü]/.test(t)) { $('sendMsg').textContent = 'Escribe algo con letras.'; return; }
-    const code = encode(t, TBL).out;
-    pub(client, T.inbox(room, me.to), { from: me.id, fromName: me.name || nameOf(me.id), code, fp: fingerprint(norm(t)) }, true);
-    pub(client, T.up(room), { t: 'sent', id: me.id });
-    me.sent = true;
-    me.sentCode = code;
+  function answer(i) {
+    if (!S || S.phase !== 'question' || me.picks[S.round] != null) return;
+    me.picks[S.round] = i;
     saveMe();
-    $('sendMsg').textContent = '';
+    pub(client, T.up(room), { t: 'answer', id: me.id, round: S.round, choice: i });
+    if (navigator.vibrate) navigator.vibrate(30);
     render();
-  }
-
-  function guess(e) {
-    e.preventDefault();
-    if (!inbox) return;
-    const g = $('guess').value;
-    if (fingerprint(norm(g)) === inbox.fp) {
-      me.solved = true;
-      me.solvedText = g.trim();
-      saveMe();
-      pub(client, T.up(room), { t: 'solved', id: me.id });
-      confetti($('burst'), 140);
-      if (navigator.vibrate) navigator.vibrate([60, 40, 120]);
-      render();
-    } else {
-      const box = $('guessForm');
-      box.classList.remove('shake');
-      void box.offsetWidth;
-      box.classList.add('shake');
-      $('guessMsg').className = 'msg bad';
-      $('guessMsg').textContent = 'Casi… revisa la tabla y vuelve a probar.';
-    }
-  }
-
-  function buildTable() {
-    const grid = $('tbl');
-    if (grid.childElementCount) return;
-    const letters = 'abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZáéíóú';
-    for (const ch of letters) {
-      const code = TBL.enc.get(ch);
-      if (!code) continue;
-      const d = document.createElement('div');
-      const b = document.createElement('b');
-      b.textContent = ch;
-      const s = document.createElement('span');
-      s.textContent = code;
-      d.append(b, s);
-      grid.append(d);
-    }
-    const sp = document.createElement('div');
-    sp.innerHTML = '<b>espacio</b><span>--</span>';
-    sp.style.gridColumn = 'span 2';
-    grid.append(sp);
   }
 
   // ---------- red ----------
   function onState(st) {
     if (!st) return;
+    const newQuestion = st.phase === 'question' && (!S || S.phase !== 'question' || S.round !== st.round);
     S = st;
+    if (newQuestion) askShownAt = Date.now();
     render();
   }
 
   function subscribeRoom() {
-    me = store.get(meKey()) || { id: uid(), name: '', joined: false };
+    me = store.get(meKey()) || { id: uid(), name: '', joined: false, picks: {} };
+    me.picks = me.picks || {};
     saveMe();
-    client.subscribe([T.state(room), T.inbox(room, me.id)], { qos: 1 });
+    client.subscribe(T.state(room), { qos: 1 });
     show('vLoading');
     $('loadingMsg').textContent = 'Entrando en la sala ' + room + '…';
     setTimeout(() => {
@@ -240,15 +199,11 @@
         }
       } else if (room && topic === T.state(room)) {
         onState(m);
-      } else if (room && me && topic === T.inbox(room, me.id)) {
-        inbox = m;
-        render();
       }
     });
     client.on('connect', () => { // al reconectar: volver a avisar de que sigo aquí
-      if (room && me && me.joined && S && S.phase === 'lobby') pub(client, T.up(room), { t: 'join', id: me.id, name: me.name });
+      if (room && me && me.joined) pub(client, T.up(room), { t: 'join', id: me.id, name: me.name });
     });
-
     if (room) {
       subscribeRoom();
     } else {
@@ -260,15 +215,6 @@
   }
 
   $('vJoin').addEventListener('submit', join);
-  $('text').addEventListener('input', updatePreview);
-  $('send').addEventListener('click', send);
-  $('guessForm').addEventListener('submit', guess);
-  $('tblBtn').addEventListener('click', () => {
-    buildTable();
-    $('tbl').hidden = !$('tbl').hidden;
-    $('tblBtn').textContent = $('tbl').hidden ? '📜 Ver tabla' : '📜 Ocultar tabla';
-  });
-
   show('vLoading');
   connect(setNet).then(boot);
 })();

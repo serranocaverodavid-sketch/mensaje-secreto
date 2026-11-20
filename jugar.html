@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jugar · Mensaje secreto</title>
+  <meta name="description" content="Entra en la sala con tu nombre, manda un mensaje secreto a tu pareja y descifra el suyo.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%90%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="juego.css">
+</head>
+<body>
+  <canvas id="burst" aria-hidden="true"></canvas>
+
+  <main class="movil">
+    <header>
+      <p class="eyebrow">El juego del mensaje secreto</p>
+      <h1><span class="grad">Mensaje secreto</span></h1>
+      <p class="net" id="net" style="margin-top:6px"><span class="dot warn"></span>Conectando…</p>
+    </header>
+
+    <!-- buscando sala -->
+    <section class="card center" id="vLoading">
+      <div class="pulse"></div>
+      <p id="loadingMsg">Buscando la sala…</p>
+    </section>
+
+    <!-- 1. nombre -->
+    <form class="card" id="vJoin" hidden autocomplete="off">
+      <h2>¿Cómo te llamas?</h2>
+      <div class="field">
+        <label for="name">Tu nombre aparecerá en la pantalla de la clase</label>
+        <input class="input" id="name" maxlength="18" placeholder="Escribe tu nombre" enterkeyhint="go" required>
+      </div>
+      <p class="msg bad" id="joinMsg"></p>
+      <button class="btn pink full" type="submit">Entrar en la sala</button>
+    </form>
+
+    <!-- 2. esperando -->
+    <section class="card center" id="vWait" hidden>
+      <p class="mut">¡Estás dentro!</p>
+      <div class="big-name" id="waitName"></div>
+      <div class="pulse"></div>
+      <p>Mira la pantalla: la partida empieza enseguida.</p>
+      <p class="note" id="waitCount" style="margin-top:6px"></p>
+    </section>
+
+    <!-- 3. partida -->
+    <section id="vGame" hidden style="display:flex;flex-direction:column;gap:16px">
+      <div class="card center">
+        <p class="mut" id="mateLabel">Tu pareja es</p>
+        <div class="big-name" id="mate"></div>
+        <p class="note" id="mateNote"></p>
+      </div>
+
+      <div class="card" id="cSend">
+        <h2>① Escríbele un mensaje secreto</h2>
+        <div id="sendForm">
+          <div class="field">
+            <label for="text">Algo corto (máx. 40 letras)</label>
+            <textarea class="area" id="text" maxlength="40" placeholder="Ej.: hola que tal"></textarea>
+          </div>
+          <p class="note" style="margin:10px 0 6px">Así lo verá en código:</p>
+          <div class="preview" id="preview"></div>
+          <p class="msg bad" id="sendMsg"></p>
+          <button class="btn pink full" type="button" id="send">🔒 Cifrar y enviar</button>
+        </div>
+        <p class="done" id="sentOk" hidden></p>
+      </div>
+
+      <div class="card" id="cRecv">
+        <h2>② Descifra su mensaje</h2>
+        <div id="recvWait" class="center">
+          <div class="pulse" style="width:48px;height:48px"></div>
+          <p class="note" id="recvWaitTxt"></p>
+        </div>
+        <div id="recvBox" hidden>
+          <p class="note center" id="recvFrom"></p>
+          <div class="secret" id="secret"></div>
+          <form id="guessForm" autocomplete="off">
+            <div class="field">
+              <label for="guess">¿Qué dice?</label>
+              <input class="input" id="guess" placeholder="Escribe lo que pone" enterkeyhint="done">
+            </div>
+            <p class="msg" id="guessMsg"></p>
+            <div class="row">
+              <button class="btn ghost" type="button" id="tblBtn">📜 Ver tabla</button>
+              <button class="btn" type="submit">Comprobar</button>
+            </div>
+          </form>
+          <div class="tbl" id="tbl" hidden></div>
+        </div>
+        <div id="winBox" class="win" hidden>
+          <div class="medal" id="medal">🎉</div>
+          <div class="place" id="place"></div>
+          <p>¡Descifrado! El mensaje era:</p>
+          <p class="secret" id="plain" style="color:var(--ink)"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- partida ya empezada / final -->
+    <section class="card center" id="vInfo" hidden>
+      <div style="font-size:2.6rem" id="infoIcon">⏳</div>
+      <h2 id="infoTitle"></h2>
+      <p id="infoText" class="mut"></p>
+    </section>
+  </main>
+
+  <noscript><p style="padding:24px">Esta página necesita JavaScript.</p></noscript>
+  <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+  <script src="cipher.js"></script>
+  <script src="red.js"></script>
+  <script src="jugar.js"></script>
+</body>
+</html>

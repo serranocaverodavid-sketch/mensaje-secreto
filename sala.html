@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sala de juego · Mensaje secreto</title>
+  <meta name="description" content="Pantalla de la clase: todos entran con su nombre, se hacen parejas y se mandan mensajes secretos.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="juego.css">
+</head>
+<body>
+  <canvas id="burst" aria-hidden="true"></canvas>
+
+  <main class="sala">
+    <header class="sala-top">
+      <div>
+        <p class="eyebrow">El juego del mensaje secreto</p>
+        <h1 id="title"><span class="grad">¡A jugar!</span></h1>
+      </div>
+      <div class="sala-meta">
+        <span class="net" id="net"><span class="dot warn"></span>Conectando…</span>
+        <div id="clock" class="timer" hidden>00:00</div>
+      </div>
+    </header>
+
+    <!-- 1. Sala de espera: QR + nombres -->
+    <section class="lobby" id="lobby">
+      <div class="card join">
+        <h2>Escanea y escribe tu nombre</h2>
+        <div class="qr" id="qr" role="img" aria-label="Código QR para entrar en la sala"></div>
+        <div>
+          <div class="mut">Código de la sala</div>
+          <div class="code" id="code">····</div>
+        </div>
+        <div class="url" id="url"></div>
+      </div>
+
+      <div class="card names">
+        <div class="names-head">
+          <h2>Jugadores</h2>
+          <span class="count" id="count">0</span>
+        </div>
+        <div class="chips" id="chips" aria-live="polite"></div>
+        <p class="empty" id="empty">Esperando a que entre alguien… 👀</p>
+        <p class="mut" style="margin-top:12px;font-size:.85rem">Haz clic en un nombre para quitarlo.</p>
+      </div>
+    </section>
+
+    <!-- 2. Partida: parejas + ranking -->
+    <section class="game" id="game" hidden>
+      <div style="display:flex;flex-direction:column;gap:16px;min-height:0">
+        <div class="stats">
+          <div class="stat"><b id="sSent">0</b>mensajes enviados</div>
+          <div class="stat"><b id="sSolved">0</b>descifrados</div>
+          <div class="stat"><b id="sTotal">0</b>jugadores</div>
+        </div>
+        <div class="pairs" id="pairs"></div>
+      </div>
+      <aside class="card podium">
+        <h2>🏆 Los más rápidos</h2>
+        <ol class="rank" id="podium"></ol>
+        <p class="mut" id="podiumEmpty" style="margin-top:8px">Nadie ha descifrado aún…</p>
+      </aside>
+    </section>
+
+    <!-- 3. Final -->
+    <section class="final" id="final" hidden>
+      <h2 class="grad">¡Fin de la partida!</h2>
+      <ol class="rank" id="finalRank"></ol>
+    </section>
+
+    <footer class="sala-foot">
+      <button type="button" class="btn big pink" id="start" disabled>¡EMPEZAR!</button>
+      <button type="button" class="btn big" id="finish" hidden>Terminar y ver ranking</button>
+      <button type="button" class="btn ghost" id="again" hidden>Nueva partida</button>
+    </footer>
+  </main>
+
+  <noscript><p style="padding:24px">Esta página necesita JavaScript.</p></noscript>
+  <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="red.js"></script>
+  <script src="sala.js"></script>
+</body>
+</html>
